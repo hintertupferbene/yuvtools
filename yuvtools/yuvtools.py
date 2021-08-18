@@ -159,15 +159,17 @@ def yuv_image_import(filename, width, height, POC=0, bitdepth=np.uint8, colorfor
 
 
 def yuv_import(filename, width, height, numframes, startPOC=0, bitdepth=np.uint8, colorformat=420):
-    Y = np.empty((height, width, numframes))
-    Cb = np.empty((height, width, numframes))
-    Cr = np.empty((height, width, numframes))
+    Y = []
+    Cb = []
+    Cr = []
     for POC in range(startPOC, startPOC + numframes, 1):
-        outPOC = POC - startPOC
-        Y[:, :, outPOC], Cb[:, :, outPOC], Cr[:, :, outPOC] = yuv_image_import(filename, width, height, POC,
+        Yi, Cbi, Cri = yuv_image_import(filename, width, height, POC,
                                                                                bitdepth=bitdepth,
                                                                                colorformat=colorformat)
-    return (Y, Cb, Cr)
+        Y.append(Yi)
+        Cb.append(Cbi)
+        Cr.append(Cri)
+    return np.dstack(Y), np.dstack(Cb), np.dstack(Cr)
 
 
 def yuv_export(Y, U, V, filename):
