@@ -1,4 +1,6 @@
 import numpy as np
+from PIL import Image
+
 
 def YCbCr4202YCbCr444(y, cb, cr, bitdepth=np.uint8):
     """Up-sample the input 4:2:0 YCbCr image to 4:4:4 YCbCr
@@ -48,6 +50,25 @@ def YCbCr420_to_channels(ycbcr420):
     return y, cb, cr
 
 
+def YCbCr444_video_to_YCbCr420_video(Y444, U444, V444):
+    Y420 = Y444.copy()
+    U420 = []
+    V420 = []
+    num_frames = U444.shape[2]
+    for f in range(num_frames):
+        U420.append(resize_image_plane(U444[:, :, f], 0.5))
+        V420.append(resize_image_plane(V444[:, :, f], 0.5))
+    U420 = np.dstack(U420)
+    V420 = np.dstack(V420)
+    return Y420, U420, V420
+
+
+def resize_image_plane(plane, factor):
+    """This is currently using the default subsampling method of resize()"""
+    height, width = plane.shape
+    return np.array(Image.fromarray(plane).resize((int(width * factor), int(height * factor))))
+
+
 def YCbCr4442YCbCr420(ycbcr444):
     """Convert 3D 4:4:4 YCbCr image array to 4:2:0 image returned as 4:4:4 3D image array
 
@@ -58,17 +79,10 @@ def YCbCr4442YCbCr420(ycbcr444):
     height, width, channels = ycbcr444.shape
     assert channels == 3
 
-    ycbcr444 = ycbcr444.astype(float)
+    cb420 = resize_image_plane(ycbcr444[1, :, :], 0.5)
+    cr420 = resize_image_plane(ycbcr444[1, :, :], 0.5)
 
-    cb420 = np.round((ycbcr444[0:-1:2, 0:-1:2, 1] + ycbcr444[1::2, 0:-1:2, 1] + ycbcr444[0:-1:2, 1::2, 1] + ycbcr444[
-                                                                                                            1::2, 1::2,
-                                                                                                            1]) / 4)
-    cr420 = np.round((ycbcr444[0:-1:2, 0:-1:2, 2] + ycbcr444[1::2, 0:-1:2, 2] + ycbcr444[0:-1:2, 1::2, 2] + ycbcr444[
-                                                                                                            1::2, 1::2,
-                                                                                                            2]) / 4)
-
-    # convert 4:2:0 image to 4:4:4 image
-    ycbcr420 = YCbCr4202YCbCr444(ycbcr444[:, :, 0], cb420.astype(np.uint8), cr420.astype(np.uint8))
+    ycbcr420 = YCbCr4202YCbCr444(ycbcr444[:, :, 0].copy(), cb420.astype(np.uint8), cr420.astype(np.uint8))
 
     return ycbcr420
 
