@@ -2,7 +2,7 @@ import sys
 import numpy as np
 from scipy import misc
 
-import conversion
+from . import conversion
 
 
 def float2str(number, decimal_points=2):
@@ -46,6 +46,7 @@ def RGB_image_import(filename, width, height, POC=0, bitdepth=np.uint8):
         f = open(filename, "rb")
     except:
         print('Could not open ' + filename)
+        sys.exit()
 
     # go to desired position
     if bitdepth == np.uint8:
@@ -77,6 +78,7 @@ def yuv_image_export(Y, U, V, filename, access_mode='wb'):
         f = open(filename, access_mode)
     except:
         print('Could not open ' + filename)
+        sys.exit()
 
     if Y.dtype == np.uint8:
         Y.astype(np.uint8).tofile(f)
@@ -118,46 +120,42 @@ def yuv_image_import(filename, width, height, POC=0, bitdepth=np.uint8, colorfor
     assert (bitdepth == np.uint8 or bitdepth == np.uint16)
     assert (colorformat == 420 or colorformat == 444)
 
-    try:
-        f = open(filename, "rb")
+    f = open(filename, "rb")
 
-        bytes_per_sample = 1
-        if bitdepth == np.uint16:
-            bytes_per_sample = 2
+    bytes_per_sample = 1
+    if bitdepth == np.uint16:
+        bytes_per_sample = 2
 
-        # go to desired position
-        if colorformat == 420:
-            f.seek(width * height * 1.5 * POC * bytes_per_sample)
-        if colorformat == 444:
-            f.seek(width * height * 3 * POC * bytes_per_sample)
+    # go to desired position
+    if colorformat == 420:
+        f.seek(int(width * height * 1.5 * POC * bytes_per_sample))
+    if colorformat == 444:
+        f.seek(width * height * 3 * POC * bytes_per_sample)
 
+    count = width * height
+    Y = np.fromfile(f, dtype=bitdepth, count=count)
+    Y = Y.reshape(height, width)
+
+    if colorformat == 420:
+        width = int(width / 2)
+        height = int(height / 2)
         count = width * height
-        Y = np.fromfile(f, dtype=bitdepth, count=count)
-        Y = Y.reshape(height, width)
+    Cb = np.fromfile(f, dtype=bitdepth, count=count)
+    Cr = np.fromfile(f, dtype=bitdepth, count=count)
+    Cb = Cb.reshape(height, width)
+    Cr = Cr.reshape(height, width)
 
-        if colorformat == 420:
-            width /= 2
-            height /= 2
-            count = width * height
-        Cb = np.fromfile(f, dtype=bitdepth, count=count)
-        Cr = np.fromfile(f, dtype=bitdepth, count=count)
-        Cb = Cb.reshape(height, width)
-        Cr = Cr.reshape(height, width)
+    f.close()
 
-        f.close()
-
-        if as444:
-            if colorformat == 444:
-                return np.dstack((Y, Cb, Cr))
-            else:
-                # convert to 444 image
-                return conversion.YCbCr4202YCbCr444(Y, Cb, Cr, bitdepth=bitdepth)
+    if as444:
+        if colorformat == 444:
+            return np.dstack((Y, Cb, Cr))
         else:
-            return (Y, Cb, Cr)
+            # convert to 444 image
+            return conversion.YCbCr4202YCbCr444(Y, Cb, Cr, bitdepth=bitdepth)
+    else:
+        return (Y, Cb, Cr)
 
-    except:
-        print('Could not open ' + filename)
-        sys.exit()
 
 
 def yuv_import(filename, width, height, numframes, startPOC=0, bitdepth=np.uint8, colorformat=420):
