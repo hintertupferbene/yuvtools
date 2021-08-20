@@ -197,12 +197,18 @@ def yuv_export(Y, U, V, filename):
 def convert_png_sequence_to_yuv420(file_pattern, out_filename):
     files = glob(file_pattern)
     files = natsorted(files)
-    print(files)
-    for f in files:
+    y = []
+    u = []
+    v = []
+    for idx, f in enumerate(files):
+        print(f'Processing file {idx + 1} of {len(files)}', end='\x1b[1K\r')
         im = imread(f)
         yuv = conversion.rgb2ycbcr(im, flavor=709)
-        y, u, v = conversion.YCbCr420_to_channels(conversion.YCbCr4442YCbCr420(yuv))
-        yuv_export(y, u, v, out_filename)
+        yi, ui, vi = conversion.YCbCr420_to_channels(conversion.YCbCr4442YCbCr420(yuv))
+        y.append(yi)
+        u.append(ui)
+        v.append(vi)
+    yuv_export(np.dstack(y), np.dstack(u), np.dstack(v), out_filename)
 
 
 def get_psnr(image1, image2, channel):

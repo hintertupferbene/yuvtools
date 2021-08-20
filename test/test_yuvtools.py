@@ -53,8 +53,12 @@ def test_imported_image_equals_exported():
     os.remove(tmp_png_filename)
 
 
-#def convert():
-    #pattern = '/Users/aheindel/'
-    #out_name =
-    #yuvtools.convert_png_sequence_to_yuv420()
-    # TODO: finish this test
+def convert():
+    y, u, v = SampleData.get_yuv444_sample_sequence(num_frames=2)
+    for f in range(2):
+        rgb = conversion.ycbcr2rgb(np.dstack((y[:,:,0], u[:,:,0], v[:,:,0])))
+        yuvtools.imwrite(rgb, f'tmp0000{f+5}.png')
+    pattern = '*.png'
+    out_name = tmp_yuv_filename
+    yuvtools.convert_png_sequence_to_yuv420(pattern, out_name)
+    # TODO: finish this test and load yuv sequence again and compare content
