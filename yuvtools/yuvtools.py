@@ -201,7 +201,7 @@ def convert_png_sequence_to_yuv420(file_pattern, out_filename):
     u = []
     v = []
     for idx, f in enumerate(files):
-        print(f'Processing file {idx + 1} of {len(files)}', end='\x1b[1K\r')
+        print(f'\x1b[1K\rProcessing file {idx + 1} of {len(files)}', end='')
         im = imread(f)
         yuv = conversion.rgb2ycbcr(im, flavor=709)
         yi, ui, vi = conversion.YCbCr420_to_channels(conversion.YCbCr4442YCbCr420(yuv))
