@@ -79,8 +79,8 @@ def YCbCr4442YCbCr420(ycbcr444):
     height, width, channels = ycbcr444.shape
     assert channels == 3
 
-    cb420 = resize_image_plane(ycbcr444[1, :, :], 0.5)
-    cr420 = resize_image_plane(ycbcr444[1, :, :], 0.5)
+    cb420 = resize_image_plane(ycbcr444[:, :, 1], 0.5)
+    cr420 = resize_image_plane(ycbcr444[:, :, 2], 0.5)
 
     ycbcr420 = YCbCr4202YCbCr444(ycbcr444[:, :, 0].copy(), cb420.astype(np.uint8), cr420.astype(np.uint8))
 
