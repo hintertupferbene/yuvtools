@@ -6,6 +6,7 @@ from yuvtools import conversion
 
 
 tmp_yuv_filename = 'tmp.yuv'
+tmp_png_filename = 'tmp.png'
 
 
 class SampleData:
@@ -41,3 +42,19 @@ def test_import_equals_export_yuv_420():
     assert np.all(np.equal(y, yr))
     assert np.all(np.equal(u, ur))
     assert np.all(np.equal(v, vr))
+
+
+def test_imported_image_equals_exported():
+    y, u, v, = SampleData.get_yuv444_sample_sequence(num_frames=1)
+    rgb = conversion.ycbcr2rgb(np.dstack((y, u, v)))
+    yuvtools.imwrite(rgb, tmp_png_filename)
+    rgb2 = yuvtools.imread(tmp_png_filename)
+    assert np.all(np.equal(rgb, rgb2))
+    os.remove(tmp_png_filename)
+
+
+#def convert():
+    #pattern = '/Users/aheindel/'
+    #out_name =
+    #yuvtools.convert_png_sequence_to_yuv420()
+    # TODO: finish this test

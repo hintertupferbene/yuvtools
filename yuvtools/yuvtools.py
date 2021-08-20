@@ -1,6 +1,8 @@
 import sys
 import numpy as np
-from scipy import misc
+from glob import glob
+from PIL import Image
+from natsort import natsorted
 
 from . import conversion
 
@@ -16,15 +18,26 @@ def imwrite(image, filename, q=100):
 
     :param ndarray image: 3D RGB image array
     :param string filename: Filename with extension .png or .jpg/.jpeg
-    :param int q: Quality parameter for JPEG
+    :param int q: The image quality for JPEG, on a scale from 0 (worst) to 95 (best)
+                  https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html#jpeg
     """
-    im = misc.toimage(image, cmin=0, cmax=255)
+    #im = misc.toimage(image, cmin=0, cmax=255)
+    im = Image.fromarray(image)
 
     tmp = filename.split('.')
     if tmp[-1] == 'jpg' or tmp[-1] == 'jpeg':
         im.save(filename, quality=q)
     else:
         im.save(filename)
+
+
+def imread(filename):
+    """Reade RGB image from file (png or jpeg)
+
+    :param string filename: Filename with extension .png or .jpg/.jpeg
+    """
+    image = Image.open(filename)
+    return np.asarray(image)
 
 
 def RGB_image_export(RGB, filename, access_mode='wb'):
@@ -157,7 +170,6 @@ def yuv_image_import(filename, width, height, POC=0, bitdepth=np.uint8, colorfor
         return (Y, Cb, Cr)
 
 
-
 def yuv_import(filename, width, height, numframes, startPOC=0, bitdepth=np.uint8, colorformat=420):
     Y = []
     Cb = []
@@ -180,6 +192,17 @@ def yuv_export(Y, U, V, filename):
         yuv_image_export(Y[:, :, POC], U[:, :, POC], V[:, :, POC], filename, access_mode=am)
         if POC == 0:
             am = 'ab'
+
+
+def convert_png_sequence_to_yuv420(file_pattern, out_filename):
+    files = glob(file_pattern)
+    files = natsorted(files)
+    print(files)
+    for f in files:
+        im = imread(f)
+        yuv = conversion.rgb2ycbcr(im, flavor=709)
+        y, u, v = conversion.YCbCr420_to_channels(conversion.YCbCr4442YCbCr420(yuv))
+        yuv_export(y, u, v, out_filename)
 
 
 def get_psnr(image1, image2, channel):
