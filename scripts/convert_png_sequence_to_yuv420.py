@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import sys
 import argparse
 
 from yuvtools import yuvtools
@@ -9,6 +10,10 @@ def convert_png_sequence_to_yuv420():
     parser = argparse.ArgumentParser()
     parser.add_argument('file_pattern', help="pattern for png file search, e.g. 'png/*.png'", type=str)
     parser.add_argument('out_filename', help='path to output yuv 420 file', type=str)
+
+    if len(sys.argv) != 3:
+        parser.print_help()
+        sys.exit()
 
     args = parser.parse_args()
 
