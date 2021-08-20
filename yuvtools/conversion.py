@@ -96,6 +96,10 @@ def rgb2ycbcr(rgb, flavor=601):
     :rtype: ndarray
     """
     height, width, channels = rgb.shape
+    if channels == 4:
+        # remove alpha channel
+        rgb = rgb[:, :, :3]
+        channels = 3
     assert channels == 3
 
     R, G, B = np.dsplit(rgb.astype(np.int32), 3)
